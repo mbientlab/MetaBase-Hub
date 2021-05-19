@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=MetaBase
+Comment=Cloud storage, visualization, and analysis for your MetaSensor data
+Icon=/home/pi/Apps/MetaBase-Node/images/app-icon-76.png
+Exec=/home/pi/.local/bin/metabase --config /home/pi/Desktop/metabase-config.json -o /home/pi/Desktop/MetaBase-CSV
+Type=Application
+Terminal=true
+Comment[en_GB]=Sync sensor data from MetaSensor boards to your hub

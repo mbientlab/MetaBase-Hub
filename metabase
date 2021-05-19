@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+
+cd ~/Apps/MetaBase-Node
+sudo npm start -- $*
+echo "Press [Enter] again to close the terminal"
+read dummy
