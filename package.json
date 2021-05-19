@@ -1,0 +1,32 @@
+{
+  "name": "metabase-hub",
+  "version": "1.2.0",
+  "description": "Stream and log data from MbientLab's sensor boards to your MetaHub",
+  "main": "app.js",
+  "scripts": {
+    "start": "node_modules/.bin/electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@bitbucket.org/mbientlab/metabase-hub.git"
+  },
+  "keywords": [
+    "sensors",
+    "bluetoothle"
+  ],
+  "author": "MbientLab",
+  "license": "LICENSE.md",
+  "homepage": "https://bitbucket.org/mbientlab/metabase-hub#readme",
+  "dependencies": {
+    "argparse": "^1.0.9",
+    "dygraphs": "^2.0.0",
+    "metawear": "1.0.0",
+    "moment": "^2.19.2",
+    "winston": "^2.4.0"
+  },
+  "devDependencies": {
+    "electron": "^12.0.8",
+    "electron-rebuild": "^1.6.0"
+  }
+}

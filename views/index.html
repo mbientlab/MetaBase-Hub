@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="../node_modules/dygraphs/dist/dygraph.min.css">
+    <style>
+      .legend {
+        font-size: 12px;
+        padding: 0px 5px 12px;
+        transform: translate(+25%);
+        position: relative;
+        top: -5px;
+        margin-bottom: -15px;
+        resize: both;
+      }
+      .dygraph-axis-label.dygraph-axis-label-y {
+        font-size: 12px
+      }
+      .dygraph-title {
+        font-size: 18px
+      }
+      .dygraph-label.dygraph-ylabel {
+        font-size: 14px
+      }
+      #root {
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body id="root">
+    <script>
+      var cartesianLabels = ['x-axis', 'y-axis', 'z-axis'], cartesianColors = [ 'red' , 'green', 'blue']
+
+      function GraphSetting(min, max, shortName, labels, colors, ylabel) {
+        var copy = labels.slice();
+        copy.unshift('samples');
+
+        this.range = [min, max];
+        this.shortName = shortName;
+        this.labels = copy;
+        this.colors = colors;
+        this.ylabel = ylabel;
+      }
+
+      const GraphConfig = {
+        "Accelerometer": new GraphSetting(-4.0, 4.0, "acc", cartesianLabels, cartesianColors, "Gravity of Earth (g)"),
+        "Gyroscope" : new GraphSetting(-250.0, 250.0, "gyro", cartesianLabels, cartesianColors, "Degrees per Second (°/s)"),
+        "Magnetometer" : new GraphSetting(-0.0003, 0.0003, "mag", cartesianLabels, cartesianColors, "Tesla (T)"),
+        "Quaternion" : new GraphSetting(-1.05, 1.05, "quat", [ 'w', 'x', 'y', 'z'], [ 'black', 'red' , 'green', 'blue'], "(1)"),
+        "Euler Angles" : new GraphSetting(-182.5, 365.0, "euler", [ 'pitch', 'roll', 'yaw' ], cartesianColors, "Degrees (°)"),
+        "Linear Acceleration" : new GraphSetting(-4.0, 4.0, "lin-acc", cartesianLabels, cartesianColors, "Gravity of Earth (g)"),
+        "Gravity" : new GraphSetting(-4.0, 4.0, "gravity", cartesianLabels, cartesianColors, "Gravity of Earth (g)"),
+        "Ambient Light" : new GraphSetting(-10, 1000, "als", [ 'illuminance' ], [ 'magenta' ], "Lux (lx)"),
+        "Pressure" : new GraphSetting(100000, 110000, "pressure", [ 'pressure' ], [ 'steelblue'], "Pressure (Pa)"),
+        "Temperature" : new GraphSetting(20, 30, "temp", [ 'thermistor' ], [ '#c05020' ], "Celsius (C)"),
+        "Humidity" : new GraphSetting(-5, 105, "humidity", [ 'relative humidity' ], [ '#30c020' ], "Percent (%)")
+      }
+    </script>
+    <script>
+      function setupGraph(name) {
+        var div = document.createElement("div");
+        div.setAttribute("id", `chart-${name}`);
+        div.setAttribute('style', 'width: 100%; resize: both');
+        root.appendChild(div);
+
+        var legend = document.createElement("div");
+        legend.setAttribute("id", `legend-${name}`);
+        legend.setAttribute("class", 'legend');
+        root.append(legend);
+
+        return [div, legend];
+      }
+    </script>
+    <script>
+      const reference = 10
+      const ipc = require('electron').ipcRenderer
+      const Dygraph = require('dygraphs');
+
+      let now = new Date().getTime();
+      let states = {}
+      let url = new URL(window.location);
+      let params = new URLSearchParams(url.search.substring(1));
+
+      let sensors = params.get('sensors').split(',').map(s => {
+        let parts = s.split('=')
+        return [parts[0], parseFloat(parts[1])]
+      });
+      let width = parseInt(params.get("width"));
+      let height = (parseInt(params.get("height")) - 20) / sensors.length - 12;
+      let root = document.getElementById("root");
+      let refresh = 1000.0 / parseFloat(params.get("fps"))
+
+      sensors.forEach(s => {
+        let config = GraphConfig[s[0]];
+
+        var data = []
+        var elements = setupGraph(s[0]);
+        var graph = new Dygraph(elements[0], data, {
+          width: width,
+          height: height,
+          valueRange: config.range,
+          labels: config.labels,
+          axes: { 
+            x: { 
+              drawAxis : false,
+              drawGrid: false
+            }
+          },
+          labelsDiv: elements[1],
+          legend: 'always',
+          title: s[0],
+          ylabel: config.ylabel,
+          colors: config.colors
+        });
+
+        states[s[0]] = {
+          graph: graph, 
+          data: data,
+          maxDataPoints: width * (reference / s[1]),
+          range: config.range.slice(),
+          update: new Date().getTime(),
+          samples: 0
+        };
+        
+        ipc.on(`update-${s[0]}-${params.get('mac')}`, (event, arg) => {
+          let state = states[s[0]];
+          state['range'] = arg.reduce((acc, e) => {
+            acc[0] = Math.min(e, acc[0])
+            acc[1] = Math.max(e, acc[1])
+            return acc;
+          }, state['range'])
+          
+          arg.unshift(state['samples'])
+          data.push(arg)
+          state['samples']+= 1
+
+          if (data.length > state['maxDataPoints']) {
+            data.shift();
+          }
+
+          let now = new Date().getTime()
+          if (now - state['update'] >= refresh) {
+            state['graph'].updateOptions({
+              file: state['data'], 
+              dateWindow: [state['samples'] - state['maxDataPoints'], state['samples']],
+              valueRange: state['range']
+            })
+            state['update'] = now
+          }
+        })
+      })
+
+      ipc.on(`resize-${params.get('mac')}`, (event, arg) => {
+        let height = (arg[1] - 20) / sensors.length - 10;
+        Object.values(states).forEach(s => s['graph'].resize(arg[0], height));
+      })
+    </script>
+  </body>
+</html>

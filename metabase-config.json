@@ -1,0 +1,9 @@
+{
+    "devices": [
+        {"mac": "D9:F1:36:D9:7D:0B", "name": "shampoo"},
+	{"mac": "C1:BC:C5:86:6C:38", "name": "brush"}
+    ],
+    "sensors": {
+        "Accelerometer-Motion": {"odr": 25, "range": 16.0}
+    }
+}
