@@ -1,4 +1,9 @@
- MetaBase configures [MetaSensor](https://mbientlab.com/store/sensors/) boards to stream data to your MetaHub.  
+# MetaBase App for MetaHub (in Javascript) by MBIENTLAB
+MetaBase configures [MetaSensor](https://mbientlab.com/store/) boards to stream data to your MetaHub.  
+
+[![Platforms](https://img.shields.io/badge/platform-linux%20-lightgrey?style=flat)](https://github.com/mbientlab/MetaBase-Hub)
+[![License](https://img.shields.io/cocoapods/l/MetaWear.svg?style=flat)](https://github.com/mbientlab/MetaBase-Hub)
+[![Version](https://img.shields.io/badge/node-%3D%208.17.0-brightgreen?style=flat)](https://github.com/mbientlab/MetaBase-Hub)
 
 # Config File
 The primary way to configure the application is with a JSON config file which is passed to the app via the ``--config`` options.  Your config file must have at minimum the devices 
